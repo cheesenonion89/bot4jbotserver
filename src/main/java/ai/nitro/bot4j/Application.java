@@ -9,18 +9,17 @@
 package ai.nitro.bot4j;
 
 import ai.nitro.bot4j.bots.InceptionBot;
-import ai.nitro.bot4j.integration.deployment.receive.webhook.DeploymentWebhook;
-import ai.nitro.bot4j.middle.repo.StatefulBotProviderService;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-
+import ai.nitro.bot4j.bots.InceptionBotNew;
 import ai.nitro.bot4j.integration.alexa.receive.webhook.AlexaWebhook;
+import ai.nitro.bot4j.integration.deployment.receive.webhook.DeploymentWebhook;
 import ai.nitro.bot4j.integration.facebook.receive.webhook.FacebookWebhook;
 import ai.nitro.bot4j.integration.slack.receive.webhook.SlackActionWebhook;
 import ai.nitro.bot4j.integration.slack.receive.webhook.SlackEventWebhook;
 import ai.nitro.bot4j.integration.slack.receive.webhook.SlackOAuthWebhook;
 import ai.nitro.bot4j.integration.telegram.receive.webhook.TelegramWebhook;
+import ai.nitro.bot4j.middle.repo.StatefulBotProviderService;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import static spark.Spark.*;
 
@@ -56,10 +55,13 @@ public class Application {
 
 		post("/telegram", (req, res) -> telegramWebhook.post(req.raw(), res.raw()));
 
+		delete("/deploy", (req, res) -> deploymentWebhook.delete(req.raw(), res.raw()));
+		get("/deploy", (req, res) -> deploymentWebhook.get(req.raw(), res.raw()));
+		post("/deploy", (req, res) -> deploymentWebhook.post(req.raw(), res.raw()));
 		put("/deploy", (req, res) -> deploymentWebhook.put(req.raw(), res.raw()));
 
-		botProviderService.registerBot(InceptionBot.class, "InceptionBot");
 
-		// Register new Bot Classes
+		botProviderService.registerBot(InceptionBot.class, "InceptionBot");
+		botProviderService.registerBot(InceptionBotNew.class, "InceptionBotNew");
 	}
 }
