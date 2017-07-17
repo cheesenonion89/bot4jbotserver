@@ -8,6 +8,10 @@
 
 package ai.nitro.bot4j.bots;
 
+import ai.nitro.bot4j.bot.impl.BotImpl;
+import ai.nitro.bot4j.middle.domain.Participant;
+import ai.nitro.bot4j.middle.domain.receive.payload.PostbackReceivePayload;
+import ai.nitro.bot4j.middle.domain.receive.payload.TextReceivePayload;
 import ai.nitro.bot4j.middle.domain.receive.payload.UrlAttachmentReceivePayload;
 import ai.nitro.bot4j.rest.ApiProviderService;
 import ai.nitro.bot4j.rest.api.ImageApi;
@@ -21,16 +25,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import ai.nitro.bot4j.bot.impl.BotImpl;
-import ai.nitro.bot4j.middle.domain.Participant;
-import ai.nitro.bot4j.middle.domain.receive.payload.PostbackReceivePayload;
-import ai.nitro.bot4j.middle.domain.receive.payload.TextReceivePayload;
-
 import retrofit2.Call;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -107,8 +103,7 @@ public class InceptionBot extends BotImpl {
 
             String reply = String.format("I am %s%s sure, that this is a %s", score, '%', firstBestLabel);
             sendText(reply, recipient);
-        }
-        else if (base64ImageReceivePayload != null) {
+        } else if (base64ImageReceivePayload != null) {
             final int probIndex = argMax(base64ImageReceivePayload.getProbabilities());
             final float prob = base64ImageReceivePayload.getProbabilities().get(probIndex);
             final String label = base64ImageReceivePayload.getLabels().get(probIndex);
@@ -117,7 +112,6 @@ public class InceptionBot extends BotImpl {
         } else {
             sendText("Something went wrong", recipient);
         }
-
 
 
         LOG.info("RECEIVED AN ATTACHMENT");
