@@ -8,8 +8,7 @@
 
 package ai.nitro.bot4j;
 
-import ai.nitro.bot4j.bots.InceptionBot;
-import ai.nitro.bot4j.bots.InceptionBotNew;
+import ai.nitro.bot4j.bots.*;
 import ai.nitro.bot4j.integration.alexa.receive.webhook.AlexaWebhook;
 import ai.nitro.bot4j.integration.deployment.receive.webhook.DeploymentWebhook;
 import ai.nitro.bot4j.integration.facebook.receive.webhook.FacebookWebhook;

@@ -10,9 +10,12 @@ import retrofit2.http.*;
  */
 public interface ImageApi {
 
-    @POST("image")
+    @POST("classify")
     Call<Base64ImageReceivePayload> putBase64Image(@Body Base64ImageSendPayload base64ImageSendPayload);
 
-    @POST("image")
-    Call<String> putBase64ImageString(@Body Base64ImageSendPayload base64ImageSendPayload);
+    @POST("classify/{bot_id}")
+    Call<String> putBase64ImageString(
+            @Path("bot_id") String botId,
+            @Body Base64ImageSendPayload base64Image
+    );
 }

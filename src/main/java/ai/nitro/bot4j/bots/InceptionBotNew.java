@@ -18,7 +18,6 @@ import ai.nitro.bot4j.rest.api.ImageApi;
 import ai.nitro.bot4j.rest.domain.Base64ImageReceivePayload;
 import ai.nitro.bot4j.rest.domain.Base64ImageSendPayload;
 import ai.nitro.bot4j.rest.domain.ImageNetResult;
-import ai.nitro.bot4j.rest.domain.ImageNetResultList;
 import com.google.gson.Gson;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
@@ -37,6 +36,8 @@ import java.util.List;
 public class InceptionBotNew extends BotImpl {
 
     private static final String BUTTON = "button";
+
+    private final static int NR_RETURN_LABELS = 3;
 
     protected final static Logger LOG = LogManager.getLogger(InceptionBotNew.class);
 
@@ -75,36 +76,37 @@ public class InceptionBotNew extends BotImpl {
     }
 
     @Override
-    protected void onReceiveAttachment(final UrlAttachmentReceivePayload payload, final Participant sender) {
+    protected void onReceiveAttachment(final UrlAttachmentReceivePayload payload, final Participant sender, Long botId) {
         final Participant recipient = sender;
         Base64ImageReceivePayload base64ImageReceivePayload = null;
-        ImageNetResultList imageNetResultList = null;
+        ImageNetResult imageNetResult = null;
 
         try {
-            // Currently not working. call.execute results in an error
-            //Call<Base64ImageReceivePayload> call = api.putBase64Image(getBase64ImageSendPayload(0, payload.getTitle(), payload.getUrl()));
-            //Response<Base64ImageReceivePayload> response = call.execute();
 
             //TODO: Current workaround, because direct object parsing does not work
-            Call<String> call = imageApi.putBase64ImageString(getBase64ImageSendPayload(0, payload.getTitle(), payload.getUrl()));
+            Call<String> call = imageApi.putBase64ImageString(
+                    Long.toString(botId),
+                    getBase64ImageSendPayload(
+                            0,
+                            payload.getTitle(),
+                            payload.getUrl())
+            );
             Response<String> response = call.execute();
             LOG.warn(response.body());
             Gson gson = new Gson();
-            imageNetResultList = gson.fromJson(response.body(), ImageNetResultList.class);
+            imageNetResult = gson.fromJson(response.body(), ImageNetResult.class);
         } catch (IOException e) {
             LOG.warn(e);
         }
 
-        if (imageNetResultList != null) {
-            List<ImageNetResult> imageNetResults = imageNetResultList.getResults();
-            ImageNetResult bestResult = imageNetResults.get(0);
-            String firstBestLabel = bestResult.getLabels().get(0);
-            Float score = bestResult.getScore() * 100;
+        if (imageNetResult != null) {
+            List<String> labels = imageNetResult.getLabels().subList(0, NR_RETURN_LABELS);
+            List<String> probabilities = imageNetResult.getProbabilities().subList(0, NR_RETURN_LABELS);
 
-            String reply = String.format("My neurons tell me that this is a %s. (Probability: %s%s)", firstBestLabel, score, '%');
+
+            String reply = String.format("My neurons tell me that this is a %s. (Probability: %s%s)", labels.get(0), (Float.parseFloat(probabilities.get(0)) * 100), '%');
             sendText(reply, recipient);
-        }
-        else if (base64ImageReceivePayload != null) {
+        } else if (base64ImageReceivePayload != null) {
             final int probIndex = argMax(base64ImageReceivePayload.getProbabilities());
             final float prob = base64ImageReceivePayload.getProbabilities().get(probIndex);
             final String label = base64ImageReceivePayload.getLabels().get(probIndex);
@@ -113,7 +115,6 @@ public class InceptionBotNew extends BotImpl {
         } else {
             sendText("Something went wrong", recipient);
         }
-
 
 
         LOG.info("RECEIVED AN ATTACHMENT");

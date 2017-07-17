@@ -8,7 +8,6 @@
 
 package ai.nitro.bot4j;
 
-import ai.nitro.bot4j.bots.ExampleBot;
 import com.google.inject.AbstractModule;
 
 import ai.nitro.bot4j.bot.Bot;
@@ -22,7 +21,7 @@ public class Module extends AbstractModule {
 
 		final MapBinder<Integer, Bot> botBinder = MapBinder.newMapBinder(binder(),
 				Integer.class, Bot.class);
-		botBinder.addBinding(0).to(ExampleBot.class);
+		//botBinder.addBinding(0).to(ExampleBot.class);
 
 	}
 

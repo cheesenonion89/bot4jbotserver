@@ -1,8 +1,8 @@
 package ai.nitro.bot4j.rest.domain;
 
-import java.util.List;
-
 import com.google.gson.annotations.SerializedName;
+
+import java.util.List;
 
 /**
  * Created by Markus on 12.04.2017.
@@ -12,8 +12,8 @@ public class ImageNetResult {
     @SerializedName("labels")
     List<String> labels;
 
-    @SerializedName("score")
-    Float score;
+    @SerializedName("probabilities")
+    List<String> probabilties;
 
     public List<String> getLabels() {
         return labels;
@@ -23,11 +23,11 @@ public class ImageNetResult {
         this.labels = labels;
     }
 
-    public Float getScore() {
-        return score;
+    public List<String> getProbabilities() {
+        return this.probabilties;
     }
 
-    public void setScore(Float score) {
-        this.score = score;
+    public void setProbabilties(List<String> probabilties) {
+        this.probabilties = probabilties;
     }
 }
