@@ -15,7 +15,6 @@ import ai.nitro.bot4j.middle.domain.receive.payload.TextReceivePayload;
 import ai.nitro.bot4j.middle.domain.receive.payload.UrlAttachmentReceivePayload;
 import ai.nitro.bot4j.rest.ApiProviderService;
 import ai.nitro.bot4j.rest.api.ImageApi;
-import ai.nitro.bot4j.rest.domain.Base64ImageReceivePayload;
 import ai.nitro.bot4j.rest.domain.Base64ImageSendPayload;
 import ai.nitro.bot4j.rest.domain.ImageNetResult;
 import com.google.gson.Gson;
@@ -43,25 +42,9 @@ public class SeasonBot extends BotImpl {
 
     ImageApi imageApi = ApiProviderService.createService(ImageApi.class);
 
-    @Override
-    protected void onReceivePostback(final PostbackReceivePayload postback, final Participant sender) throws Exception {
-
-        LOG.info("ON RECEIVE POSTBACK");
-        final Participant recipient = sender;
-
-        final String name = postback.getName();
-        final String[] payload = postback.getPayload();
-
-        switch (postback.getName()) {
-            case BUTTON:
-                final String joinedPayload = StringUtils.join(payload, ", ");
-                sendText(joinedPayload, recipient);
-                break;
-            default:
-                LOG.warn("Unknown postback {}", name);
-        }
-    }
-
+    /*
+     * Provides a basic reply for incoming texts
+     */
     @Override
     protected void onReceiveText(final TextReceivePayload receiveTextPayload, final Participant sender)
             throws Exception {
@@ -75,22 +58,23 @@ public class SeasonBot extends BotImpl {
 
     }
 
+    /*
+    * Processes an image attachment by requesting a classification from the @imageApi
+    * Parses the first label and the probability in a response specific to the seasons an image has been taken in
+    */
     @Override
     protected void onReceiveAttachment(final UrlAttachmentReceivePayload payload, final Participant sender, Long botId) {
         final Participant recipient = sender;
-        Base64ImageReceivePayload base64ImageReceivePayload = null;
         ImageNetResult imageNetResult = null;
 
+        Call<String> call = imageApi.postBase64Image(
+                Long.toString(botId),
+                getBase64ImageSendPayload(
+                        0,
+                        payload.getTitle(),
+                        payload.getUrl())
+        );
         try {
-
-            //TODO: Current workaround, because direct object parsing does not work
-            Call<String> call = imageApi.postBase64ImageString(
-                    Long.toString(botId),
-                    getBase64ImageSendPayload(
-                            0,
-                            payload.getTitle(),
-                            payload.getUrl())
-            );
             Response<String> response = call.execute();
             LOG.warn(response.body());
             Gson gson = new Gson();
@@ -108,19 +92,32 @@ public class SeasonBot extends BotImpl {
 
             String reply = String.format("I am %s%s sure, that this image has been taken in %s.", (Float.parseFloat(probabilities.get(0)) * 100), '%', label);
             sendText(reply, recipient);
-        } else if (base64ImageReceivePayload != null) {
-            final int probIndex = argMax(base64ImageReceivePayload.getProbabilities());
-            final float prob = base64ImageReceivePayload.getProbabilities().get(probIndex);
-            final String label = base64ImageReceivePayload.getLabels().get(probIndex);
-            String reply = String.format("I am %s percent certain, that this is a %s", prob, label);
-            sendText(reply, recipient);
         } else {
-            sendText("Something went wrong", recipient);
+            sendText("Something went wrong, please try again with another image.", recipient);
         }
 
 
         LOG.info("RECEIVED AN ATTACHMENT");
 
+    }
+
+    @Override
+    protected void onReceivePostback(final PostbackReceivePayload postback, final Participant sender) throws Exception {
+
+        LOG.info("ON RECEIVE POSTBACK");
+        final Participant recipient = sender;
+
+        final String name = postback.getName();
+        final String[] payload = postback.getPayload();
+
+        switch (postback.getName()) {
+            case BUTTON:
+                final String joinedPayload = StringUtils.join(payload, ", ");
+                sendText(joinedPayload, recipient);
+                break;
+            default:
+                LOG.warn("Unknown postback {}", name);
+        }
     }
 
     private Base64ImageSendPayload getBase64ImageSendPayload(final int messageId, String title, final String url) {
@@ -151,16 +148,6 @@ public class SeasonBot extends BotImpl {
 
         }
         return result;
-    }
-
-    private int argMax(List<Float> list) {
-        int argMax = 0;
-        for (int i = 0; i < list.size(); i++) {
-            if (list.get(i) > list.get(argMax)) {
-                argMax = i;
-            }
-        }
-        return argMax;
     }
 
 }

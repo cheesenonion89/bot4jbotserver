@@ -15,7 +15,6 @@ import ai.nitro.bot4j.middle.domain.receive.payload.TextReceivePayload;
 import ai.nitro.bot4j.middle.domain.receive.payload.UrlAttachmentReceivePayload;
 import ai.nitro.bot4j.rest.ApiProviderService;
 import ai.nitro.bot4j.rest.api.ImageApi;
-import ai.nitro.bot4j.rest.domain.Base64ImageReceivePayload;
 import ai.nitro.bot4j.rest.domain.Base64ImageSendPayload;
 import ai.nitro.bot4j.rest.domain.ImageNetResult;
 import com.google.gson.Gson;
@@ -39,9 +38,71 @@ public class InceptionBot extends BotImpl {
 
     private final static int NR_RETURN_LABELS = 3;
 
-    protected final static Logger LOG = LogManager.getLogger(InceptionBot.class);
+    private final static Logger LOG = LogManager.getLogger(InceptionBot.class);
 
-    ImageApi imageApi = ApiProviderService.createService(ImageApi.class);
+    private ImageApi imageApi = ApiProviderService.createService(ImageApi.class);
+
+
+    /*
+     * Provides a basic reply for incoming texts
+     */
+    @Override
+    protected void onReceiveText(final TextReceivePayload receiveTextPayload, final Participant sender)
+            throws Exception {
+        final Participant recipient = sender;
+        final String text = receiveTextPayload.getText();
+
+        LOG.info("ON RECEIVE TEXT");
+        LOG.info("received {}", text);
+
+        sendText("Send an image of car to me and see if I can tell you what brand it is...", recipient);
+
+    }
+
+    /*
+     * Processes an image attachment by requesting a classification from the @imageApi
+     * Parses the first label and the probability in a response
+     */
+    @Override
+    protected void onReceiveAttachment(final UrlAttachmentReceivePayload payload, final Participant sender, Long botId) {
+        final Participant recipient = sender;
+        ImageNetResult imageNetResult = null;
+
+        Call<String> call = imageApi.postBase64Image(
+                Long.toString(botId),
+                getBase64ImageSendPayload(
+                        0,
+                        payload.getTitle(),
+                        payload.getUrl())
+        );
+
+        try {
+            Response<String> response = call.execute();
+
+            LOG.warn(response.body());
+            Gson gson = new Gson();
+            imageNetResult = gson.fromJson(response.body(), ImageNetResult.class);
+        } catch (IOException e) {
+            LOG.warn(e);
+        }
+
+        if (imageNetResult != null) {
+            List<String> labels = imageNetResult.getLabels().subList(0, NR_RETURN_LABELS);
+            List<String> probabilities = imageNetResult.getProbabilities().subList(0, NR_RETURN_LABELS);
+
+            String label = labels.get(0);
+            label = label.substring(0, 1).toUpperCase() + label.substring(1); //Capitalize first letter
+
+            String reply = String.format("This is very likely a %s. (Probability: %s%s)", label, (Float.parseFloat(probabilities.get(0)) * 100), '%');
+            sendText(reply, recipient);
+        } else {
+            sendText("Something went wrong, please try again with another image.", recipient);
+        }
+
+
+        LOG.info("RECEIVED AN ATTACHMENT");
+
+    }
 
     @Override
     protected void onReceivePostback(final PostbackReceivePayload postback, final Participant sender) throws Exception {
@@ -60,67 +121,6 @@ public class InceptionBot extends BotImpl {
             default:
                 LOG.warn("Unknown postback {}", name);
         }
-    }
-
-    @Override
-    protected void onReceiveText(final TextReceivePayload receiveTextPayload, final Participant sender)
-            throws Exception {
-        final Participant recipient = sender;
-        final String text = receiveTextPayload.getText();
-
-        LOG.info("ON RECEIVE TEXT");
-        LOG.info("received {}", text);
-
-        sendText("processing your message...", recipient);
-
-    }
-
-    @Override
-    protected void onReceiveAttachment(final UrlAttachmentReceivePayload payload, final Participant sender, Long botId) {
-        final Participant recipient = sender;
-        Base64ImageReceivePayload base64ImageReceivePayload = null;
-        ImageNetResult imageNetResult = null;
-
-        try {
-
-            //TODO: Current workaround, because direct object parsing does not work
-            Call<String> call = imageApi.postBase64ImageString(
-                    Long.toString(botId),
-                    getBase64ImageSendPayload(
-                            0,
-                            payload.getTitle(),
-                            payload.getUrl())
-            );
-            Response<String> response = call.execute();
-            LOG.warn(response.body());
-            Gson gson = new Gson();
-            imageNetResult = gson.fromJson(response.body(), ImageNetResult.class);
-        } catch (IOException e) {
-            LOG.warn(e);
-        }
-
-        if (imageNetResult != null) {
-            List<String> labels = imageNetResult.getLabels().subList(0, NR_RETURN_LABELS);
-            List<String> probabilities = imageNetResult.getProbabilities().subList(0, NR_RETURN_LABELS);
-
-            String label = labels.get(0);
-            label = label.substring(0, 1).toUpperCase() + label.substring(1); //Capitalize first letter
-
-            String reply = String.format("This is very likely a %s. (Probability: %s%s)", label, (Float.parseFloat(probabilities.get(0)) * 100), '%');
-            sendText(reply, recipient);
-        } else if (base64ImageReceivePayload != null) {
-            final int probIndex = argMax(base64ImageReceivePayload.getProbabilities());
-            final float prob = base64ImageReceivePayload.getProbabilities().get(probIndex);
-            final String label = base64ImageReceivePayload.getLabels().get(probIndex);
-            String reply = String.format("I am %s percent certain, that this is a %s", prob, label);
-            sendText(reply, recipient);
-        } else {
-            sendText("Something went wrong", recipient);
-        }
-
-
-        LOG.info("RECEIVED AN ATTACHMENT");
-
     }
 
     private Base64ImageSendPayload getBase64ImageSendPayload(final int messageId, String title, final String url) {

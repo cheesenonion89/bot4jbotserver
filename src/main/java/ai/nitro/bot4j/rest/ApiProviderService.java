@@ -4,8 +4,8 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-/**
- * Created by Markus on 27.04.2017.
+/*
+ * Provides the ImageApi, which implements the HTTP endpoints to connect to the CNN Server
  */
 public class ApiProviderService {
 

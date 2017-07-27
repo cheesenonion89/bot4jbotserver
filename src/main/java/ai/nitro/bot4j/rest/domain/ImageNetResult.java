@@ -4,8 +4,8 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-/**
- * Created by Markus on 12.04.2017.
+/*
+ * Domain class representing a response from the classification by a CNN
  */
 public class ImageNetResult {
 

@@ -21,7 +21,6 @@ public class Module extends AbstractModule {
 
 		final MapBinder<Integer, Bot> botBinder = MapBinder.newMapBinder(binder(),
 				Integer.class, Bot.class);
-		//botBinder.addBinding(0).to(ExampleBot.class);
 
 	}
 
