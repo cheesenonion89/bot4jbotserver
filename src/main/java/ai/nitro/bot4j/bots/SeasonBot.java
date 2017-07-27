@@ -33,7 +33,7 @@ import java.net.URL;
 import java.util.List;
 
 
-public class InceptionBot extends BotImpl {
+public class SeasonBot extends BotImpl {
 
     private static final String BUTTON = "button";
 
@@ -106,7 +106,7 @@ public class InceptionBot extends BotImpl {
             String label = labels.get(0);
             label = label.substring(0, 1).toUpperCase() + label.substring(1); //Capitalize first letter
 
-            String reply = String.format("This is very likely a %s. (Probability: %s%s)", label, (Float.parseFloat(probabilities.get(0)) * 100), '%');
+            String reply = String.format("I am %s%s sure, that this image has been taken in %s.", (Float.parseFloat(probabilities.get(0)) * 100), '%', label);
             sendText(reply, recipient);
         } else if (base64ImageReceivePayload != null) {
             final int probIndex = argMax(base64ImageReceivePayload.getProbabilities());

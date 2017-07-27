@@ -80,19 +80,11 @@ public class InceptionBotNew extends BotImpl {
         final Participant recipient = sender;
         Base64ImageReceivePayload base64ImageReceivePayload = null;
         ImageNetResult imageNetResult = null;
+        Base64ImageSendPayload base64ImageSendPayload = getBase64ImageSendPayload(0, payload.getTitle(), payload.getUrl());
 
         try {
-
-            //TODO: Current workaround, because direct object parsing does not work
-            Call<String> call = imageApi.putBase64ImageString(
-                    Long.toString(botId),
-                    getBase64ImageSendPayload(
-                            0,
-                            payload.getTitle(),
-                            payload.getUrl())
-            );
+            Call<String> call = imageApi.postBase64ImageString(Long.toString(botId),base64ImageSendPayload );
             Response<String> response = call.execute();
-            LOG.warn(response.body());
             Gson gson = new Gson();
             imageNetResult = gson.fromJson(response.body(), ImageNetResult.class);
         } catch (IOException e) {

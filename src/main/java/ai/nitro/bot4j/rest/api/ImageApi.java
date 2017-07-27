@@ -14,7 +14,7 @@ public interface ImageApi {
     Call<Base64ImageReceivePayload> putBase64Image(@Body Base64ImageSendPayload base64ImageSendPayload);
 
     @POST("classify/{bot_id}")
-    Call<String> putBase64ImageString(
+    Call<String> postBase64ImageString(
             @Path("bot_id") String botId,
             @Body Base64ImageSendPayload base64Image
     );

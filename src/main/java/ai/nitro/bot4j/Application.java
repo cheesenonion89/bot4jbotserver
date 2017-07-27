@@ -59,8 +59,10 @@ public class Application {
 		post("/deploy", (req, res) -> deploymentWebhook.post(req.raw(), res.raw()));
 		put("/deploy", (req, res) -> deploymentWebhook.put(req.raw(), res.raw()));
 
+		get("/status", (req, res) -> "The Bot Server is up and running");
+
 
 		botProviderService.registerBot(InceptionBot.class, "InceptionBot");
-		botProviderService.registerBot(InceptionBotNew.class, "InceptionBotNew");
+		botProviderService.registerBot(SeasonBot.class, "SeasonBot");
 	}
 }
