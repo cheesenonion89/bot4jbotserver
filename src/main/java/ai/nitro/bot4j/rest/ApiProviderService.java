@@ -14,7 +14,7 @@ public class ApiProviderService {
 
     private static Retrofit.Builder builder =
             new Retrofit.Builder()
-                    .baseUrl(LOCAL_NETWORK_URL)
+                    .baseUrl(IMAGE_API_URL)
                     .addConverterFactory(GsonConverterFactory.create());
 
     private static Retrofit retrofit = builder.build();
